@@ -46,7 +46,7 @@
         }
     </style>
 </head>
-<body class="text-gray-800 antialiased flex flex-col min-h-screen">
+<body class="text-gray-800 antialiased flex flex-col min-h-screen overflow-x-hidden">
 
     <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -64,23 +64,23 @@
         </div>
     </nav>
 
-    <main class="flex-grow flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <main class="flex-grow flex flex-col items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         
-        <div class="text-center mb-10 max-w-3xl">
+        <div class="text-center mb-8 sm:mb-10 max-w-3xl px-2">
             <span class="inline-block py-1 px-3 rounded-full bg-red-100 text-red-700 text-sm font-semibold mb-4 border border-red-200">
                 <i class="fa-solid fa-robot mr-1"></i> Didukung AI Gemini & Machine Learning
             </span>
-            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4 drop-shadow-sm">
+            <h1 class="text-2xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4 drop-shadow-sm">
                 Kenali Risiko Jantung Anda Sejak Dini
             </h1>
-            <p class="text-lg text-gray-600 leading-relaxed">
+            <p class="text-sm sm:text-lg text-gray-600 leading-relaxed">
                 Isi formulir kesehatan di bawah ini. Sistem cerdas kami akan menganalisis profil Anda dan memberikan prediksi risiko kardiovaskular secara personal.
             </p>
         </div>
 
         <section class="w-full max-w-4xl">
             <div class="relative">
-                <div id="form-container" class="glass-panel rounded-3xl p-6 sm:p-10 transition-all duration-500">
+                <div id="form-container" class="glass-panel rounded-3xl p-4 sm:p-6 md:p-10 transition-all duration-500">
                     <form id="heartForm" class="space-y-8">
                         
                         <div>
@@ -88,7 +88,7 @@
                                 <i class="fa-regular fa-id-card text-red-600 text-xl"></i>
                                 <h3 class="text-xl font-semibold text-gray-800">Profil Pasien</h3>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                                 <div>
                                     <label class="block text-sm font-medium mb-1.5 text-gray-700">Nama Lengkap</label>
                                     <input type="text" id="name" required class="w-full rounded-xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-shadow bg-white shadow-sm" placeholder="Masukkan nama Anda">
@@ -138,7 +138,7 @@
                             
                             <div class="mt-2">
                                 <label class="block text-sm font-medium mb-1.5 text-gray-700">Skor BMI Anda</label>
-                                <input type="number" step="0.1" id="bmi_score" required class="w-full md:w-1/3 rounded-xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-shadow bg-white shadow-sm font-semibold text-gray-800" placeholder="Cth: 22.5">
+                                <input type="number" step="0.1" id="bmi_score" required class="w-full sm:w-1/2 md:w-1/3 rounded-xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-shadow bg-white shadow-sm font-semibold text-gray-800" placeholder="Cth: 22.5">
                             </div>
                         </div>
 
@@ -200,7 +200,7 @@
                         </div>
 
                         <div class="pt-6">
-                            <button id="submitBtn" type="submit" class="w-full py-4 text-lg font-bold text-white bg-red-600 rounded-xl shadow-lg shadow-red-600/30 hover:bg-red-700 hover:shadow-xl hover:shadow-red-700/40 transform hover:-translate-y-0.5 transition-all duration-200 flex justify-center items-center gap-2">
+                            <button id="submitBtn" type="submit" class="w-full py-3 sm:py-4 text-base sm:text-lg font-bold text-white bg-red-600 rounded-xl shadow-lg shadow-red-600/30 hover:bg-red-700 hover:shadow-xl hover:shadow-red-700/40 transform hover:-translate-y-0.5 transition-all duration-200 flex justify-center items-center gap-2">
                                 <i class="fa-solid fa-stethoscope"></i> Analisis Kesehatan Jantung Saya
                             </button>
                             <p class="text-center text-xs text-gray-400 mt-4"><i class="fa-solid fa-lock mr-1"></i>Data Anda tidak disimpan di server kami.</p>
@@ -208,18 +208,18 @@
                     </form>
                 </div>
 
-                <div id="result-section" class="hidden glass-panel rounded-3xl p-6 sm:p-10 border-t-8 border-t-red-600 transition-all duration-500 relative overflow-hidden">
+                <div id="result-section" class="hidden glass-panel rounded-3xl p-4 sm:p-6 md:p-10 border-t-8 border-t-red-600 transition-all duration-500 relative overflow-hidden">
                     <div class="absolute -right-10 -top-10 text-red-50 opacity-50 z-0 pointer-events-none">
                         <i class="fa-solid fa-heart-pulse text-[200px]"></i>
                     </div>
 
                     <div class="relative z-10">
-                        <div class="text-center mb-10">
-                            <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">Laporan Analisis Jantung</h2>
-                            <p class="text-gray-500">Hasil prediksi Machine Learning & evaluasi medis AI Gemini</p>
+                        <div class="text-center mb-6 sm:mb-10">
+                            <h2 class="text-xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">Laporan Analisis Jantung</h2>
+                            <p class="text-sm sm:text-base text-gray-500">Hasil prediksi Machine Learning & evaluasi medis AI Gemini</p>
                         </div>
                         
-                        <div class="flex flex-col md:flex-row gap-6 mb-8">
+                        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-6 sm:mb-8">
                             <div class="flex-1 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
                                 <h4 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-4 flex items-center gap-2 border-b pb-2"><i class="fa-regular fa-user"></i> Identitas Pasien</h4>
                                 <div class="space-y-3">
@@ -308,7 +308,7 @@
             </div>
         </section>
         
-        <footer class="mt-16 text-center text-sm text-gray-500">
+        <footer class="mt-10 sm:mt-16 text-center text-sm text-gray-500">
             <p>&copy; 2026 CardioCheck System. Dikembangkan untuk keperluan akademis.</p>
             <p class="mt-1 text-xs">Peringatan: Sistem ini bukan pengganti diagnosis medis profesional.</p>
         </footer>
