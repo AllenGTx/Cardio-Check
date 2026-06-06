@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioCheck | Deteksi Dini Kesehatan Jantung</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            /* Menggunakan gambar dari folder Asset dengan overlay transparan 65% */
+            background-image: linear-gradient(rgba(249, 250, 251, 0.65), rgba(249, 250, 251, 0.65)), url('/Asset/Heart&stetos.png');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        .heartbeat { animation: beat 1.5s infinite; }
+        @keyframes beat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.15); }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+        }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+        /* Custom arrow for BMI indicator */
+        .bmi-indicator-arrow {
+            width: 0; 
+            height: 0; 
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 12px solid #1f2937; /* Tailwind gray-800 */
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased flex flex-col min-h-screen">
+
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <div class="bg-red-50 p-2 rounded-lg">
+                        <i class="fa-solid fa-heart-pulse text-2xl text-red-600 heartbeat"></i>
+                    </div>
+                    <span class="font-bold text-2xl text-gray-900 tracking-tight">Cardio<span class="text-red-600">Check</span></span>
+                </div>
+                <div class="hidden md:block text-sm text-gray-500 font-medium">
+                    <i class="fa-solid fa-shield-halved mr-1 text-green-500"></i> Aman & Rahasia
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        
+        <div class="text-center mb-10 max-w-3xl">
+            <span class="inline-block py-1 px-3 rounded-full bg-red-100 text-red-700 text-sm font-semibold mb-4 border border-red-200">
+                <i class="fa-solid fa-robot mr-1"></i> Didukung AI Gemini & Machine Learning
+            </span>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4 drop-shadow-sm">
+                Kenali Risiko Jantung Anda Sejak Dini
+            </h1>
+            <p class="text-lg text-gray-600 leading-relaxed">
+                Isi formulir kesehatan di bawah ini. Sistem cerdas kami akan menganalisis profil Anda dan memberikan prediksi risiko kardiovaskular secara personal.
+            </p>
+        </div>
+
+        <section class="w-full max-w-4xl">
+            <div class="relative">
+                <div id="form-container" class="glass-panel rounded-3xl p-6 sm:p-10 transition-all duration-500">
+                    <form id="heartForm" class="space-y-8">
+                        
+                        <div>
+                            <div class="flex items-center gap-2 border-b border-gray-200 pb-2 mb-5">
+                                <i class="fa-regular fa-id-card text-red-600 text-xl"></i>
+                                <h3 class="text-xl font-semibold text-gray-800">Profil Pasien</h3>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Nama Lengkap</label>
+                                    <input type="text" id="name" required class="w-full rounded-xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-shadow bg-white shadow-sm" placeholder="Masukkan nama Anda">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Jenis Kelamin</label>
+                                    <select id="gender" class="w-full rounded-xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-shadow bg-white shadow-sm cursor-pointer">
+                                        <option value="Male">Laki-laki</option>
+                                        <option value="Female">Perempuan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Umur (Tahun)</label>
+                                    <input type="number" id="age" required min="18" max="120" class="w-full rounded-xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-shadow bg-white shadow-sm" placeholder="Cth: 45">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-red-50 to-white p-6 rounded-2xl border border-red-100 shadow-sm">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-weight-scale text-red-600 text-xl"></i>
+                                    <h3 class="text-xl font-semibold text-gray-800">Indeks Massa Tubuh (BMI)</h3>
+                                </div>
+                                <button type="button" onclick="toggleBMICalc()" class="text-sm px-4 py-2 bg-white border border-red-200 text-red-600 font-medium rounded-full hover:bg-red-50 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-red-200 flex items-center gap-2">
+                                    <i class="fa-solid fa-calculator"></i> <span id="bmi-btn-text">Buka Kalkulator BMI</span>
+                                </button>
+                            </div>
+                            
+                            <div id="bmiCalculator" class="hidden bg-white p-5 rounded-xl mb-5 shadow-sm border border-gray-200">
+                                <p class="text-sm text-gray-500 mb-4">Masukkan tinggi dan berat badan Anda untuk menghitung skor BMI secara otomatis.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1 text-gray-700">Tinggi (cm)</label>
+                                        <input type="number" id="height" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 bg-gray-50">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1 text-gray-700">Berat (kg)</label>
+                                        <input type="number" id="weight" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 bg-gray-50">
+                                    </div>
+                                </div>
+                                <div class="mt-4 flex items-center gap-4">
+                                    <button type="button" onclick="calculateBMI()" class="bg-gray-800 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors shadow-sm">Hitung & Terapkan</button>
+                                    <p id="bmiResultText" class="text-sm text-gray-700 font-medium"></p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <label class="block text-sm font-medium mb-1.5 text-gray-700">Skor BMI Anda</label>
+                                <input type="number" step="0.1" id="bmi_score" required class="w-full md:w-1/3 rounded-xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-shadow bg-white shadow-sm font-semibold text-gray-800" placeholder="Cth: 22.5">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center gap-2 border-b border-gray-200 pb-2 mb-5">
+                                <i class="fa-solid fa-notes-medical text-red-600 text-xl"></i>
+                                <h3 class="text-xl font-semibold text-gray-800">Gaya Hidup & Riwayat Penyakit</h3>
+                            </div>
+                            
+                            <div class="bg-blue-50/80 border border-blue-200 rounded-xl p-4 mb-6 shadow-sm flex gap-3 items-start">
+                                <i class="fa-solid fa-circle-info text-blue-600 mt-1"></i>
+                                <div>
+                                    <h4 class="text-sm font-bold text-blue-900 mb-1">Informasi: Apa itu COPD (PPOK)?</h4>
+                                    <p class="text-sm text-blue-800 leading-relaxed">
+                                        Penyakit paru-paru jangka panjang (seperti bronkitis kronis) yang membuat penderita kesulitan bernapas akibat rusaknya saluran pernapasan, sering kali dipicu oleh asap rokok.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                <div class="bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700"><i class="fa-solid fa-smoking text-gray-400 mr-1"></i> Merokok?</label>
+                                    <select id="smoker" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="No">Tidak</option><option value="Yes">Ya</option></select>
+                                </div>
+                                <div class="bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700"><i class="fa-solid fa-person-running text-gray-400 mr-1"></i> Sering Olahraga?</label>
+                                    <select id="physical_activity" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="Yes">Ya (Sering)</option><option value="No">Tidak (Jarang)</option></select>
+                                </div>
+                                <div class="bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700"><i class="fa-solid fa-wine-glass text-gray-400 mr-1"></i> Konsumsi Alkohol?</label>
+                                    <select id="alcohol" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="No">Tidak</option><option value="Yes">Ya</option></select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Pernah Diabetes?</label>
+                                    <select id="diabetes" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="No">Tidak</option><option value="Yes">Ya</option></select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Pernah Stroke?</label>
+                                    <select id="stroke" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="No">Tidak</option><option value="Yes">Ya</option></select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Pernah Angina (Nyeri Dada)?</label>
+                                    <select id="angina" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="No">Tidak</option><option value="Yes">Ya</option></select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Susah Jalan/Naik Tangga?</label>
+                                    <select id="diff_walking" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="No">Lancar</option><option value="Yes">Ya (Susah/Nyeri)</option></select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Riwayat COPD (PPOK)?</label>
+                                    <select id="hadCOPD" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="No">Tidak</option><option value="Yes">Ya</option></select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1.5 text-gray-700">Riwayat Penyakit Ginjal?</label>
+                                    <select id="hadKidneyDisease" class="w-full rounded-lg border border-gray-300 p-2.5 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-white cursor-pointer"><option value="No">Tidak</option><option value="Yes">Ya</option></select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-6">
+                            <button id="submitBtn" type="submit" class="w-full py-4 text-lg font-bold text-white bg-red-600 rounded-xl shadow-lg shadow-red-600/30 hover:bg-red-700 hover:shadow-xl hover:shadow-red-700/40 transform hover:-translate-y-0.5 transition-all duration-200 flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-stethoscope"></i> Analisis Kesehatan Jantung Saya
+                            </button>
+                            <p class="text-center text-xs text-gray-400 mt-4"><i class="fa-solid fa-lock mr-1"></i>Data Anda tidak disimpan di server kami.</p>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="result-section" class="hidden glass-panel rounded-3xl p-6 sm:p-10 border-t-8 border-t-red-600 transition-all duration-500 relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 text-red-50 opacity-50 z-0 pointer-events-none">
+                        <i class="fa-solid fa-heart-pulse text-[200px]"></i>
+                    </div>
+
+                    <div class="relative z-10">
+                        <div class="text-center mb-10">
+                            <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">Laporan Analisis Jantung</h2>
+                            <p class="text-gray-500">Hasil prediksi Machine Learning & evaluasi medis AI Gemini</p>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row gap-6 mb-8">
+                            <div class="flex-1 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                                <h4 class="text-xs font-bold tracking-wider text-gray-400 uppercase mb-4 flex items-center gap-2 border-b pb-2"><i class="fa-regular fa-user"></i> Identitas Pasien</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500 text-sm">Nama Lengkap</span>
+                                        <span id="res-name" class="font-semibold text-gray-900"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500 text-sm">Jenis Kelamin</span>
+                                        <span id="res-gender" class="font-semibold text-gray-900"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-500 text-sm">Usia</span>
+                                        <span class="font-semibold text-gray-900"><span id="res-age"></span> Tahun</span>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-2 border-t border-gray-50">
+                                        <span class="text-gray-500 text-sm">Skor Terdaftar BMI</span>
+                                        <span id="res-bmi-text" class="font-bold text-gray-900"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex-1 bg-gradient-to-b from-white to-gray-50 rounded-2xl p-6 flex flex-col items-center justify-center border border-gray-200 shadow-sm relative overflow-hidden">
+                                <h4 class="text-xs font-bold tracking-wider text-gray-500 uppercase mb-3">Probabilitas Risiko Jantung</h4>
+                                <div class="flex items-start gap-1">
+                                    <span id="res-score" class="text-6xl font-black text-gray-800 tracking-tighter"></span>
+                                    <span class="text-2xl font-bold text-gray-400 mt-2">%</span>
+                                </div>
+                                <div id="res-status-container" class="mt-4 px-4 py-1.5 rounded-full flex items-center gap-2 border shadow-sm">
+                                    <div id="res-status-dot" class="w-2.5 h-2.5 rounded-full"></div>
+                                    <p id="res-status" class="text-sm font-bold uppercase tracking-wide"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-10">
+                            <div class="flex justify-between items-end mb-4">
+                                <h4 class="text-xs font-bold tracking-wider text-gray-400 uppercase flex items-center gap-2"><i class="fa-solid fa-weight-scale text-gray-500"></i> Analisis Kategori BMI</h4>
+                                <span id="res-bmi-badge" class="text-xs font-bold px-3 py-1 rounded-full"></span>
+                            </div>
+                            
+                            <div class="relative w-full mt-8 mb-6">
+                                <div id="bmi-indicator-container" class="absolute -top-4 w-full" style="z-index: 10;">
+                                    <div id="bmi-indicator" class="relative transition-all duration-1000 ease-out flex flex-col items-center" style="left: 0%; width: 0px;">
+                                        <div class="bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-md absolute -top-6 whitespace-nowrap"><span id="res-bmi-float"></span></div>
+                                        <div class="bmi-indicator-arrow absolute -top-1"></div>
+                                    </div>
+                                </div>
+
+                                <div class="w-full h-4 rounded-full flex overflow-hidden shadow-inner">
+                                    <div class="h-full bg-blue-400" style="width: 20%;"></div>
+                                    <div class="h-full bg-green-400" style="width: 25%;"></div>
+                                    <div class="h-full bg-yellow-400" style="width: 20%;"></div>
+                                    <div class="h-full bg-orange-400" style="width: 15%;"></div>
+                                    <div class="h-full bg-red-500" style="width: 20%;"></div>
+                                </div>
+                                
+                                <div class="flex justify-between mt-2 text-[10px] sm:text-xs font-medium text-gray-400">
+                                    <span class="text-left w-[20%]">&lt;18.5<br><span class="hidden sm:inline">Underweight</span></span>
+                                    <span class="text-center w-[25%]">Normal</span>
+                                    <span class="text-center w-[20%]">Overweight</span>
+                                    <span class="text-center w-[15%]">Obese</span>
+                                    <span class="text-right w-[20%]">35+<br><span class="hidden sm:inline">Ext. Obese</span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm">
+                            <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
+                                <div class="bg-blue-100 p-2 rounded-lg text-blue-600">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900">Penjelasan Klinis AI</h3>
+                            </div>
+                            <div id="ai-analysis-content" class="prose prose-red max-w-none text-gray-700 leading-relaxed">
+                            </div>
+                        </div>
+
+                        <div class="mt-12 text-center">
+                            <button onclick="resetForm()" class="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 hover:text-red-600 transition-colors shadow-sm">
+                                <i class="fa-solid fa-arrow-rotate-left"></i> Mulai Pemeriksaan Baru
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <footer class="mt-16 text-center text-sm text-gray-500">
+            <p>&copy; 2026 CardioCheck System. Dikembangkan untuk keperluan akademis.</p>
+            <p class="mt-1 text-xs">Peringatan: Sistem ini bukan pengganti diagnosis medis profesional.</p>
+        </footer>
+    </main>
+
+    <script>
+        function toggleBMICalc() {
+            const calc = document.getElementById('bmiCalculator');
+            const icon = calc.classList.contains('hidden') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-calculator"></i>';
+            const text = calc.classList.contains('hidden') ? "Tutup Kalkulator" : "Buka Kalkulator BMI";
+            
+            calc.classList.toggle('hidden');
+            document.getElementById('bmi-btn-text').parentElement.innerHTML = `${icon} <span id="bmi-btn-text">${text}</span>`;
+        }
+
+        function calculateBMI() {
+            const h = parseFloat(document.getElementById('height').value);
+            const w = parseFloat(document.getElementById('weight').value);
+            if (h > 0 && w > 0) {
+                const bmi = (w / ((h / 100) ** 2)).toFixed(1);
+                const inputScore = document.getElementById('bmi_score');
+                inputScore.value = bmi;
+                
+                inputScore.classList.add('ring-2', 'ring-green-400', 'border-green-400');
+                setTimeout(() => inputScore.classList.remove('ring-2', 'ring-green-400', 'border-green-400'), 1500);
+
+                document.getElementById('bmiResultText').innerHTML = `<span class="text-green-600"><i class="fa-solid fa-check-circle mr-1"></i> Diterapkan: <strong>${bmi}</strong></span>`;
+                setTimeout(() => toggleBMICalc(), 1200);
+            } else {
+                alert("Masukkan tinggi dan berat badan yang valid.");
+            }
+        }
+
+        document.getElementById('heartForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const age = parseInt(document.getElementById('age').value);
+            const bmiScore = parseFloat(document.getElementById('bmi_score').value);
+
+            if (isNaN(age) || age < 18 || age > 120) {
+                alert("⚠️ Validasi Gagal: Harap masukkan umur antara 18 hingga 120 tahun.");
+                return;
+            }
+            if (isNaN(bmiScore) || bmiScore < 10 || bmiScore > 80) {
+                alert("⚠️ Validasi Gagal: Nilai BMI tidak wajar! Jika tidak tahu, gunakan fitur 'Buka Kalkulator BMI'.");
+                return;
+            }
+
+            let ageCategory = age < 24 ? "18-24" : age <= 29 ? "25-29" : age <= 34 ? "30-34" : age <= 39 ? "35-39" : age <= 44 ? "40-44" : age <= 49 ? "45-49" : age <= 54 ? "50-54" : age <= 59 ? "55-59" : age <= 64 ? "60-64" : age <= 69 ? "65-69" : age <= 74 ? "70-74" : age <= 79 ? "75-79" : "80 or older";
+
+            const dataToBackend = {
+                name: document.getElementById('name').value,
+                gender: document.getElementById('gender').value,
+                age_category: ageCategory,
+                bmi: bmiScore,
+                smoker: document.getElementById('smoker').value,
+                physicalActivity: document.getElementById('physical_activity').value,
+                hadDiabetes: document.getElementById('diabetes').value,
+                hadStroke: document.getElementById('stroke').value,
+                hadAngina: document.getElementById('angina').value,
+                diffWalking: document.getElementById('diff_walking').value,
+                hadCOPD: document.getElementById('hadCOPD').value,
+                hadKidneyDisease: document.getElementById('hadKidneyDisease').value,
+                alcohol: document.getElementById('alcohol').value
+            };
+
+            const submitBtn = document.getElementById('submitBtn');
+            const originalBtn = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses AI & Prediksi...';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataToBackend)
+                });
+                const result = await response.json();
+
+                if(result.status === 'success') {
+                    const formContainer = document.getElementById('form-container');
+                    const resultSection = document.getElementById('result-section');
+                    
+                    formContainer.classList.add('opacity-0', 'scale-95');
+                    
+                    setTimeout(() => {
+                        formContainer.classList.add('hidden');
+                        resultSection.classList.remove('hidden');
+                        
+                        void resultSection.offsetWidth;
+                        
+                        resultSection.classList.add('opacity-100', 'scale-100');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }, 300);
+
+                    // Isi Profil
+                    document.getElementById('res-name').innerText = dataToBackend.name;
+                    document.getElementById('res-gender').innerText = dataToBackend.gender === "Male" ? "Laki-laki" : "Perempuan";
+                    document.getElementById('res-age').innerText = age;
+                    document.getElementById('res-score').innerText = result.risk_score;
+                    
+                    // --- LOGIKA BMI BARU DI SINI ---
+                    document.getElementById('res-bmi-text').innerText = bmiScore;
+                    document.getElementById('res-bmi-float').innerText = bmiScore;
+                    
+                    let bmiCategory = "";
+                    let bmiColorClass = "";
+                    let pointerPercent = 0;
+
+                    // Mengatur posisi panah (pointerPercent) sesuai rentang 5 kotak (20% , 25% , 20% , 15% , 20%)
+                    if (bmiScore < 18.5) {
+                        bmiCategory = "Underweight";
+                        bmiColorClass = "bg-blue-100 text-blue-700 border-blue-200";
+                        pointerPercent = Math.max(2, ((bmiScore - 10) / 8.5) * 20);
+                    } else if (bmiScore < 25) {
+                        bmiCategory = "Normal";
+                        bmiColorClass = "bg-green-100 text-green-700 border-green-200";
+                        pointerPercent = 20 + (((bmiScore - 18.5) / 6.5) * 25);
+                    } else if (bmiScore < 30) {
+                        bmiCategory = "Overweight";
+                        bmiColorClass = "bg-yellow-100 text-yellow-700 border-yellow-200";
+                        pointerPercent = 45 + (((bmiScore - 25) / 5) * 20);
+                    } else if (bmiScore < 35) {
+                        bmiCategory = "Obese";
+                        bmiColorClass = "bg-orange-100 text-orange-700 border-orange-200";
+                        pointerPercent = 65 + (((bmiScore - 30) / 5) * 15);
+                    } else {
+                        bmiCategory = "Extremely Obese";
+                        bmiColorClass = "bg-red-100 text-red-700 border-red-200";
+                        pointerPercent = Math.min(98, 80 + (((bmiScore - 35) / 15) * 20));
+                    }
+
+                    const badge = document.getElementById('res-bmi-badge');
+                    badge.innerText = bmiCategory;
+                    badge.className = `text-xs font-bold px-3 py-1 rounded-full border ${bmiColorClass}`;
+                    
+                    // Animasi panah indikator bergeser ke tempat yang tepat
+                    setTimeout(() => {
+                        document.getElementById('bmi-indicator').style.left = `${pointerPercent}%`;
+                    }, 500);
+                    // --------------------------------
+
+                    const statusContainer = document.getElementById('res-status-container');
+                    const statusDot = document.getElementById('res-status-dot');
+                    const statusText = document.getElementById('res-status');
+                    
+                    if(result.risk_score < 20) { 
+                        statusText.innerText = "Risiko Rendah"; 
+                        statusText.className = "text-sm font-bold uppercase tracking-wide text-green-700";
+                        statusContainer.className = "mt-4 px-4 py-1.5 rounded-full flex items-center gap-2 border shadow-sm bg-green-50 border-green-200";
+                        statusDot.className = "w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse";
+                    }
+                    else if(result.risk_score < 50) { 
+                        statusText.innerText = "Waspada"; 
+                        statusText.className = "text-sm font-bold uppercase tracking-wide text-yellow-700";
+                        statusContainer.className = "mt-4 px-4 py-1.5 rounded-full flex items-center gap-2 border shadow-sm bg-yellow-50 border-yellow-200";
+                        statusDot.className = "w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse";
+                    }
+                    else { 
+                        statusText.innerText = "Risiko Tinggi"; 
+                        statusText.className = "text-sm font-bold uppercase tracking-wide text-red-700";
+                        statusContainer.className = "mt-4 px-4 py-1.5 rounded-full flex items-center gap-2 border shadow-sm bg-red-50 border-red-200";
+                        statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse";
+                    }
+
+                    document.getElementById('ai-analysis-content').innerHTML = result.ai_analysis;
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Gagal terhubung ke server. Pastikan aplikasi Flask sedang berjalan.');
+            } finally {
+                submitBtn.innerHTML = originalBtn;
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            }
+        });
+
+        function resetForm() {
+            const formContainer = document.getElementById('form-container');
+            const resultSection = document.getElementById('result-section');
+            
+            resultSection.classList.remove('opacity-100', 'scale-100');
+            resultSection.classList.add('opacity-0', 'scale-95');
+            
+            // Kembalikan posisi panah BMI ke 0
+            document.getElementById('bmi-indicator').style.left = `0%`;
+            
+            setTimeout(() => {
+                document.getElementById('heartForm').reset();
+                resultSection.classList.add('hidden');
+                
+                formContainer.classList.remove('hidden');
+                formContainer.classList.remove('opacity-0', 'scale-95');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 300);
+        }
+    </script>
+</body>
+</html>
