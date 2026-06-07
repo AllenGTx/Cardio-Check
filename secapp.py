@@ -71,23 +71,46 @@ def predict():
         risk_score = round(risk_probability * 100, 1)
 
         prompt = f"""
-        Kamu adalah dokter spesialis jantung yang menjelaskan hasil analisis kepada pasien bernama {name}.
+        Kamu adalah dokter spesialis jantung. Buat penjelasan hasil analisis untuk pasien bernama {name} dalam format HTML murni (tanpa markdown, tanpa kode blok, langsung output HTML).
 
         Data Pasien: Usia {age_str}, Gender {gender}, BMI {bmi}, Perokok: {data.get('smoker')}, Alkohol: {alcohol}, Diabetes: {data.get('hadDiabetes')}, Stroke: {data.get('hadStroke')}, Angina: {data.get('hadAngina')}, Kesulitan Berjalan: {data.get('diffWalking')}, COPD: {data.get('hadCOPD')}, Ginjal: {data.get('hadKidneyDisease')}.
         Skor Risiko Jantung ML: {risk_score}%.
 
-        Tugas: Buat penjelasan dalam format HTML (tanpa teks pengantar, tanpa markdown, langsung isi konten) yang dibagi menjadi TEPAT 3 bagian dengan struktur berikut:
+        ATURAN FORMAT HTML YANG WAJIB DIIKUTI:
 
-        BAGIAN 1 - Gunakan heading <h3> dengan teks "Analisis Skor Risiko"
-        Jelaskan apa arti skor {risk_score}% ini: apakah tergolong rendah/sedang/tinggi, faktor-faktor dari data pasien yang paling berkontribusi mendorong skor ini naik atau turun, dan mekanisme medisnya secara singkat.
+        1. Untuk heading setiap bagian, gunakan: <h3>Judul Bagian</h3>
+           Heading akan otomatis tampil dengan garis biru di kiri (sudah di-style).
 
-        BAGIAN 2 - Gunakan heading <h3> dengan teks "Faktor Risiko dari Kebiasaan dan Riwayat Kesehatan"
-        Analisis spesifik kebiasaan dan riwayat penyakit pasien (merokok, alkohol, aktivitas fisik, diabetes, stroke, angina, COPD, ginjal, BMI) yang berkontribusi terhadap risiko penyakit jantung. Jelaskan mekanisme bagaimana setiap faktor yang relevan mempengaruhi jantung.
+        2. Untuk teks yang menunjukkan HAL POSITIF / BAIK (faktor pelindung jantung):
+           Gunakan: <span class="ai-positive">teks positif</span>  → tampil HIJAU TEBAL
 
-        BAGIAN 3 - Gunakan heading <h3> dengan teks "Solusi dan Rekomendasi Edukasi"
-        Berikan rekomendasi konkret dan spesifik untuk pasien ini berdasarkan data di atas. Fokus pada hal-hal yang bisa diubah (gaya hidup, kebiasaan). Sertakan juga kapan pasien disarankan menemui dokter. Bersifat edukatif dan memotivasi.
+        3. Untuk teks yang menunjukkan HAL BERISIKO / BERBAHAYA:
+           Gunakan: <span class="ai-risk">teks berisiko</span>  → tampil MERAH TEBAL
 
-        Format setiap bagian dengan HTML yang rapi. Gunakan <ul> dan <li> untuk daftar, <strong> untuk penekanan penting. Pisahkan tiap bagian dengan <hr>.
+        4. Untuk angka skor atau nilai penting:
+           Gunakan: <span class="ai-score">{risk_score}%</span>  → tampil merah besar
+
+        5. Untuk istilah medis atau penekanan netral penting:
+           Gunakan: <span class="ai-highlight">istilah</span>  → tampil cokelat/amber tebal
+
+        6. Untuk daftar faktor: gunakan <ul><li>...</li></ul>
+           Di awal setiap <li>, tulis label faktor dengan <strong>Nama Faktor:</strong> lalu penjelasannya.
+           Contoh: <li><strong>BMI ({bmi}):</strong> Penjelasan... <span class="ai-positive">berat badan ideal</span> mengurangi...</li>
+
+        7. Pisahkan 3 bagian dengan: <hr>
+
+        STRUKTUR 3 BAGIAN YANG WAJIB:
+
+        BAGIAN 1 — <h3>Analisis Skor Risiko</h3>
+        Tulis 1-2 paragraf <p> yang menjelaskan arti skor <span class="ai-score">{risk_score}%</span>, apakah rendah/sedang/tinggi, dan gambaran umum kondisi pasien. Gunakan span warna sesuai aturan di atas.
+        Lalu buat sub-heading dengan <h3>Faktor yang Mengurangi Risiko (Positif):</h3> dan daftar <ul> faktor positif pasien.
+        Lalu buat sub-heading <h3>Faktor yang Meningkatkan Risiko:</h3> dan daftar <ul> faktor risiko pasien.
+
+        BAGIAN 2 — Setelah <hr>, tulis <h3>Analisis Kebiasaan dan Riwayat Kesehatan</h3>
+        Buat daftar <ul> yang menganalisis SETIAP faktor data pasien secara individual. Setiap <li> harus memiliki <strong>Nama Faktor:</strong> di awal, lalu penjelasan mekanisme medisnya. Gunakan span warna sesuai aturan.
+
+        BAGIAN 3 — Setelah <hr>, tulis <h3>Solusi dan Rekomendasi Edukasi</h3>
+        Buat daftar <ul> rekomendasi konkret dan spesifik untuk pasien ini. Setiap <li> diawali <strong>Nama Rekomendasi:</strong>. Sertakan kapan harus ke dokter. Gunakan span warna untuk hal positif yang dianjurkan.
         """
 
         ai_response = llm_model.generate_content(prompt)
