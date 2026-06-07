@@ -17,7 +17,7 @@ llm_model = genai.GenerativeModel('gemini-2.5-flash')
 # 3. Inisialisasi Flask dengan folder 'Asset' untuk file gambar
 app = Flask(__name__, static_folder='Asset', static_url_path='/Asset')
 
-# 4. Load Model dan Scaler
+# 4. Load Model dan Scaler (BMI Only)
 MODEL_PATH = 'models/heart_attack_model.pkl'
 SCALER_PATH = 'models/heart_attack_scaler.pkl'
 THRESHOLD = 0.4898
@@ -30,7 +30,7 @@ except Exception as e:
 
 try:
     scaler = joblib.load(SCALER_PATH)
-    print("✅ Scaler (11 fitur) berhasil dimuat!")
+    print("✅ Scaler BMI-Only berhasil dimuat!")
 except Exception as e:
     print(f"❌ Error memuat scaler: {e}")
 
@@ -59,24 +59,26 @@ def predict():
 
         # Susun X_input: 11 fitur dalam urutan yang benar
         X_input = [
-            bmi,                                                              # BMI
-            int(age_mapping.get(age_str, 0)),                                 # AgeCategory
-            int(data.get('smoker', 0)),                                       # SmokerStatus
-            1 if data.get('physicalActivity') == 'Yes' else 0,               # PhysicalActivities
-            1.0 if data.get('hadDiabetes') == 'Yes' else 0.0,               # HadDiabetes
-            1 if data.get('hadStroke') == 'Yes' else 0,                      # HadStroke
-            1 if data.get('hadAngina') == 'Yes' else 0,                      # HadAngina
-            1 if data.get('diffWalking') == 'Yes' else 0,                    # DifficultyWalking
-            1 if data.get('hadCOPD') == 'Yes' else 0,                        # HadCOPD
-            1 if data.get('hadKidneyDisease') == 'Yes' else 0,               # HadKidneyDisease
-            1 if gender == 'Male' else 0                                      # Sex
+            bmi,                                                              # index 0: BMI (akan di-scale)
+            int(age_mapping.get(age_str, 0)),                                 # index 1: AgeCategory
+            int(data.get('smoker', 0)),                                       # index 2: SmokerStatus
+            1 if data.get('physicalActivity') == 'Yes' else 0,               # index 3: PhysicalActivities
+            1.0 if data.get('hadDiabetes') == 'Yes' else 0.0,               # index 4: HadDiabetes
+            1 if data.get('hadStroke') == 'Yes' else 0,                      # index 5: HadStroke
+            1 if data.get('hadAngina') == 'Yes' else 0,                      # index 6: HadAngina
+            1 if data.get('diffWalking') == 'Yes' else 0,                    # index 7: DifficultyWalking
+            1 if data.get('hadCOPD') == 'Yes' else 0,                        # index 8: HadCOPD
+            1 if data.get('hadKidneyDisease') == 'Yes' else 0,               # index 9: HadKidneyDisease
+            1 if gender == 'Male' else 0                                      # index 10: Sex
         ]
 
-        # Standarisasi seluruh 11 fitur sekaligus (array 2D)
-        X_scaled = scaler.transform([X_input])
+        # Scale HANYA BMI (index 0), fitur lain dibiarkan mentah
+        bmi_mentah = X_input[0]
+        bmi_scaled = scaler.transform([[bmi_mentah]])[0][0]
+        X_input[0] = bmi_scaled
 
         # Probabilitas murni kelas berisiko (kelas 1)
-        probabilitas = lr_model.predict_proba(X_scaled)[0][1]
+        probabilitas = lr_model.predict_proba([X_input])[0][1]
 
         # Terapkan custom threshold secara manual
         if probabilitas >= THRESHOLD:
