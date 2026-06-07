@@ -69,6 +69,7 @@ def predict():
 
         risk_probability = float(lr_model.predict_proba(input_data)[0][1])
         risk_score = round(risk_probability * 100, 1)
+        confidence = round(max(risk_probability, 1 - risk_probability) * 100, 1)
 
 
         smoker_labels = {'0': 'Tidak Pernah Merokok', '1': 'Mantan Perokok', '2': 'Perokok Beberapa Hari', '3': 'Perokok Setiap Hari'}
@@ -119,7 +120,7 @@ def predict():
         ai_response = llm_model.generate_content(prompt)
         ai_analysis = ai_response.text.replace("```html", "").replace("```", "").strip()
 
-        return jsonify({'status': 'success', 'risk_score': risk_score, 'ai_analysis': ai_analysis})
+        return jsonify({'status': 'success', 'risk_score': risk_score, 'confidence': confidence, 'ai_analysis': ai_analysis})
 
     except Exception:
         return jsonify({'status': 'error', 'message': traceback.format_exc()}), 500

@@ -302,6 +302,7 @@
                                     <div id="res-status-dot" class="w-2.5 h-2.5 rounded-full"></div>
                                     <p id="res-status" class="text-sm font-bold uppercase tracking-wide"></p>
                                 </div>
+                                <p class="mt-3 text-xs text-gray-400">Tingkat Kepercayaan Model: <span id="res-confidence" class="font-semibold text-gray-600"></span>%</p>
                             </div>
                         </div>
 
@@ -460,6 +461,7 @@
                     document.getElementById('res-gender').innerText = dataToBackend.gender === "Male" ? "Laki-laki" : "Perempuan";
                     document.getElementById('res-age').innerText = age;
                     document.getElementById('res-score').innerText = result.risk_score;
+                    document.getElementById('res-confidence').innerText = result.confidence;
                     
                     // --- LOGIKA BMI BARU DI SINI ---
                     document.getElementById('res-bmi-text').innerText = bmiScore;
