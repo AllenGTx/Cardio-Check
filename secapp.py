@@ -17,7 +17,7 @@ llm_model = genai.GenerativeModel('gemini-2.5-flash')
 app = Flask(__name__, static_folder='Asset', static_url_path='/Asset')
 
 # 4. Load Model Logistic Regression
-MODEL_PATH = 'models/model_jantung_logreg.pkl'
+MODEL_PATH = 'models/final_heart_attack_lr_model_calibrated.pkl'
 try:
     lr_model = joblib.load(MODEL_PATH)
     print("✅ Model Logistic Regression berhasil dimuat!")
