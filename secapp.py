@@ -1,6 +1,7 @@
 import os
 import joblib
 import pandas as pd
+import numpy as np
 from flask import Flask, request, jsonify, render_template
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -16,13 +17,22 @@ llm_model = genai.GenerativeModel('gemini-2.5-flash')
 # 3. Inisialisasi Flask dengan folder 'Asset' untuk file gambar
 app = Flask(__name__, static_folder='Asset', static_url_path='/Asset')
 
-# 4. Load Model Logistic Regression
-MODEL_PATH = 'models/final_heart_attack_lr_model_calibrated.pkl'
+# 4. Load Model dan Scaler
+MODEL_PATH = 'models/heart_attack_model.pkl'
+SCALER_PATH = 'models/heart_attack_scaler.pkl'
+THRESHOLD = 0.4898
+
 try:
     lr_model = joblib.load(MODEL_PATH)
     print("✅ Model Logistic Regression berhasil dimuat!")
 except Exception as e:
     print(f"❌ Error memuat model: {e}")
+
+try:
+    bmi_scaler = joblib.load(SCALER_PATH)
+    print("✅ Scaler BMI berhasil dimuat!")
+except Exception as e:
+    print(f"❌ Error memuat scaler: {e}")
 
 @app.route('/')
 def home():
@@ -46,9 +56,12 @@ def predict():
             "45-49": 5, "50-54": 6, "55-59": 7, "60-64": 8, "65-69": 9, 
             "70-74": 10, "75-79": 11, "80 or older": 12
         }
+
+        # Scale BMI menggunakan scaler
+        bmi_scaled = float(bmi_scaler.transform([[bmi]])[0][0])
         
         input_dict = {
-            'BMI': [bmi],
+            'BMI': [bmi_scaled],
             'AgeCategory': [int(age_mapping.get(age_str, 0))],
             'SmokerStatus': [int(data.get('smoker', 0))],
             'PhysicalActivities': [1 if data.get('physicalActivity') == 'Yes' else 0],
@@ -69,7 +82,6 @@ def predict():
 
         risk_probability = float(lr_model.predict_proba(input_data)[0][1])
         risk_score = round(risk_probability * 100, 1)
-
 
         smoker_labels = {'0': 'Tidak Pernah Merokok', '1': 'Mantan Perokok', '2': 'Perokok Beberapa Hari', '3': 'Perokok Setiap Hari'}
         smoker_display = smoker_labels.get(str(data.get('smoker', '0')), 'Tidak Pernah Merokok')
