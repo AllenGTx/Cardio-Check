@@ -50,7 +50,7 @@ def predict():
         input_dict = {
             'BMI': [bmi],
             'AgeCategory': [int(age_mapping.get(age_str, 0))],
-            'SmokerStatus': [1 if data.get('smoker') == 'Yes' else 0],
+            'SmokerStatus': [int(data.get('smoker', 0))],
             'PhysicalActivities': [1 if data.get('physicalActivity') == 'Yes' else 0],
             'HadDiabetes': [1.0 if data.get('hadDiabetes') == 'Yes' else 0.0],
             'HadStroke': [1 if data.get('hadStroke') == 'Yes' else 0],
@@ -70,10 +70,13 @@ def predict():
         risk_probability = float(lr_model.predict_proba(input_data)[0][1])
         risk_score = round(risk_probability * 100, 1)
 
+
+        smoker_labels = {'0': 'Tidak Pernah Merokok', '1': 'Mantan Perokok', '2': 'Perokok Beberapa Hari', '3': 'Perokok Setiap Hari'}
+        smoker_display = smoker_labels.get(str(data.get('smoker', '0')), 'Tidak Pernah Merokok')
         prompt = f"""
         Kamu adalah dokter spesialis jantung. Buat penjelasan hasil analisis untuk pasien bernama {name} dalam format HTML murni (tanpa markdown, tanpa kode blok, langsung output HTML).
 
-        Data Pasien: Usia {age_str}, Gender {gender}, BMI {bmi}, Perokok: {data.get('smoker')}, Alkohol: {alcohol}, Diabetes: {data.get('hadDiabetes')}, Stroke: {data.get('hadStroke')}, Angina: {data.get('hadAngina')}, Kesulitan Berjalan: {data.get('diffWalking')}, COPD: {data.get('hadCOPD')}, Ginjal: {data.get('hadKidneyDisease')}.
+        Data Pasien: Usia {age_str}, Gender {gender}, BMI {bmi}, Perokok: {smoker_display}, Alkohol: {alcohol}, Diabetes: {data.get('hadDiabetes')}, Stroke: {data.get('hadStroke')}, Angina: {data.get('hadAngina')}, Kesulitan Berjalan: {data.get('diffWalking')}, COPD: {data.get('hadCOPD')}, Ginjal: {data.get('hadKidneyDisease')}.
         Skor Risiko Jantung ML: {risk_score}%.
 
         ATURAN FORMAT HTML YANG WAJIB DIIKUTI:
