@@ -29,8 +29,8 @@ except Exception as e:
     print(f"❌ Error memuat model: {e}")
 
 try:
-    bmi_scaler = joblib.load(SCALER_PATH)
-    print("✅ Scaler BMI berhasil dimuat!")
+    scaler = joblib.load(SCALER_PATH)
+    print("✅ Scaler (11 fitur) berhasil dimuat!")
 except Exception as e:
     print(f"❌ Error memuat scaler: {e}")
 
@@ -46,45 +46,49 @@ def predict():
         gender = data.get('gender')
         bmi = float(data.get('bmi'))
         age_str = data.get('age_category')
-        alcohol = data.get('alcohol') 
-        
+        alcohol = data.get('alcohol')
+
         if bmi < 10 or bmi > 80:
             return jsonify({'status': 'error', 'message': 'Nilai BMI tidak wajar.'}), 400
 
         age_mapping = {
-            "18-24": 0, "25-29": 1, "30-34": 2, "35-39": 3, "40-44": 4, 
-            "45-49": 5, "50-54": 6, "55-59": 7, "60-64": 8, "65-69": 9, 
+            "18-24": 0, "25-29": 1, "30-34": 2, "35-39": 3, "40-44": 4,
+            "45-49": 5, "50-54": 6, "55-59": 7, "60-64": 8, "65-69": 9,
             "70-74": 10, "75-79": 11, "80 or older": 12
         }
 
-        # Scale BMI menggunakan scaler
-        bmi_scaled = float(bmi_scaler.transform([[bmi]])[0][0])
-        
-        input_dict = {
-            'BMI': [bmi_scaled],
-            'AgeCategory': [int(age_mapping.get(age_str, 0))],
-            'SmokerStatus': [int(data.get('smoker', 0))],
-            'PhysicalActivities': [1 if data.get('physicalActivity') == 'Yes' else 0],
-            'HadDiabetes': [1.0 if data.get('hadDiabetes') == 'Yes' else 0.0],
-            'HadStroke': [1 if data.get('hadStroke') == 'Yes' else 0],
-            'HadAngina': [1 if data.get('hadAngina') == 'Yes' else 0],
-            'DifficultyWalking': [1 if data.get('diffWalking') == 'Yes' else 0],
-            'HadCOPD': [1 if data.get('hadCOPD') == 'Yes' else 0],
-            'HadKidneyDisease': [1 if data.get('hadKidneyDisease') == 'Yes' else 0],
-            'Sex': [1 if gender == 'Male' else 0]
-        }
+        # Susun X_input: 11 fitur dalam urutan yang benar
+        X_input = [
+            bmi,                                                              # BMI
+            int(age_mapping.get(age_str, 0)),                                 # AgeCategory
+            int(data.get('smoker', 0)),                                       # SmokerStatus
+            1 if data.get('physicalActivity') == 'Yes' else 0,               # PhysicalActivities
+            1.0 if data.get('hadDiabetes') == 'Yes' else 0.0,               # HadDiabetes
+            1 if data.get('hadStroke') == 'Yes' else 0,                      # HadStroke
+            1 if data.get('hadAngina') == 'Yes' else 0,                      # HadAngina
+            1 if data.get('diffWalking') == 'Yes' else 0,                    # DifficultyWalking
+            1 if data.get('hadCOPD') == 'Yes' else 0,                        # HadCOPD
+            1 if data.get('hadKidneyDisease') == 'Yes' else 0,               # HadKidneyDisease
+            1 if gender == 'Male' else 0                                      # Sex
+        ]
 
-        input_data = pd.DataFrame(input_dict)
-        expected_columns = ['BMI', 'AgeCategory', 'SmokerStatus', 'PhysicalActivities', 
-                            'HadDiabetes', 'HadStroke', 'HadAngina', 'DifficultyWalking', 
-                            'HadCOPD', 'HadKidneyDisease', 'Sex']
-        input_data = input_data[expected_columns]
+        # Standarisasi seluruh 11 fitur sekaligus (array 2D)
+        X_scaled = scaler.transform([X_input])
 
-        risk_probability = float(lr_model.predict_proba(input_data)[0][1])
-        risk_score = round(risk_probability * 100, 1)
+        # Probabilitas murni kelas berisiko (kelas 1)
+        probabilitas = lr_model.predict_proba(X_scaled)[0][1]
+
+        # Terapkan custom threshold secara manual
+        if probabilitas >= THRESHOLD:
+            hasil_prediksi = 1  # Berisiko
+        else:
+            hasil_prediksi = 0  # Aman
+
+        risk_score = round(probabilitas * 100, 1)
 
         smoker_labels = {'0': 'Tidak Pernah Merokok', '1': 'Mantan Perokok', '2': 'Perokok Beberapa Hari', '3': 'Perokok Setiap Hari'}
         smoker_display = smoker_labels.get(str(data.get('smoker', '0')), 'Tidak Pernah Merokok')
+
         prompt = f"""
         Kamu adalah dokter spesialis jantung. Buat penjelasan hasil analisis untuk pasien bernama {name} dalam format HTML murni (tanpa markdown, tanpa kode blok, langsung output HTML).
 
@@ -131,7 +135,12 @@ def predict():
         ai_response = llm_model.generate_content(prompt)
         ai_analysis = ai_response.text.replace("```html", "").replace("```", "").strip()
 
-        return jsonify({'status': 'success', 'risk_score': risk_score, 'ai_analysis': ai_analysis})
+        return jsonify({
+            'status': 'success',
+            'risk_score': risk_score,
+            'hasil_prediksi': hasil_prediksi,
+            'ai_analysis': ai_analysis
+        })
 
     except Exception:
         return jsonify({'status': 'error', 'message': traceback.format_exc()}), 500
