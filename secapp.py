@@ -71,11 +71,23 @@ def predict():
         risk_score = round(risk_probability * 100, 1)
 
         prompt = f"""
-        Sapa pasien {name} dengan ramah.
-        Data: Usia {age_str}, Gender {gender}, BMI {bmi}, Perokok: {data.get('smoker')}, Alkohol: {alcohol}, Diabetes: {data.get('hadDiabetes')}, Stroke: {data.get('hadStroke')}, Angina: {data.get('hadAngina')}, Kesulitan Berjalan: {data.get('diffWalking')}, COPD: {data.get('hadCOPD')}, Ginjal: {data.get('hadKidneyDisease')}.
+        Kamu adalah dokter spesialis jantung yang menjelaskan hasil analisis kepada pasien bernama {name}.
+
+        Data Pasien: Usia {age_str}, Gender {gender}, BMI {bmi}, Perokok: {data.get('smoker')}, Alkohol: {alcohol}, Diabetes: {data.get('hadDiabetes')}, Stroke: {data.get('hadStroke')}, Angina: {data.get('hadAngina')}, Kesulitan Berjalan: {data.get('diffWalking')}, COPD: {data.get('hadCOPD')}, Ginjal: {data.get('hadKidneyDisease')}.
         Skor Risiko Jantung ML: {risk_score}%.
-        
-        Tugas: Buat penjelasan HTML RAPI (tanpa teks pengantar) yang menjelaskan kaitan faktor-faktor tersebut dengan kesehatan jantung (terutama mekanisme penyakit penyerta).
+
+        Tugas: Buat penjelasan dalam format HTML (tanpa teks pengantar, tanpa markdown, langsung isi konten) yang dibagi menjadi TEPAT 3 bagian dengan struktur berikut:
+
+        BAGIAN 1 - Gunakan heading <h3> dengan teks "Analisis Skor Risiko"
+        Jelaskan apa arti skor {risk_score}% ini: apakah tergolong rendah/sedang/tinggi, faktor-faktor dari data pasien yang paling berkontribusi mendorong skor ini naik atau turun, dan mekanisme medisnya secara singkat.
+
+        BAGIAN 2 - Gunakan heading <h3> dengan teks "Faktor Risiko dari Kebiasaan dan Riwayat Kesehatan"
+        Analisis spesifik kebiasaan dan riwayat penyakit pasien (merokok, alkohol, aktivitas fisik, diabetes, stroke, angina, COPD, ginjal, BMI) yang berkontribusi terhadap risiko penyakit jantung. Jelaskan mekanisme bagaimana setiap faktor yang relevan mempengaruhi jantung.
+
+        BAGIAN 3 - Gunakan heading <h3> dengan teks "Solusi dan Rekomendasi Edukasi"
+        Berikan rekomendasi konkret dan spesifik untuk pasien ini berdasarkan data di atas. Fokus pada hal-hal yang bisa diubah (gaya hidup, kebiasaan). Sertakan juga kapan pasien disarankan menemui dokter. Bersifat edukatif dan memotivasi.
+
+        Format setiap bagian dengan HTML yang rapi. Gunakan <ul> dan <li> untuk daftar, <strong> untuk penekanan penting. Pisahkan tiap bagian dengan <hr>.
         """
 
         ai_response = llm_model.generate_content(prompt)
