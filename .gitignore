@@ -1,0 +1,18 @@
+# Environment Variables (jangan di-push ke Git!)
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local development
+.local/
+
+# Large files tidak perlu di-deploy
+zipFile.zip
+
+# IDE
+.vscode/
+.idea/
