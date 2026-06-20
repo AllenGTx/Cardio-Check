@@ -80,7 +80,9 @@ def predict():
 
         # Scale HANYA BMI (index 0), fitur lain dibiarkan mentah
         bmi_mentah = X_input[0]
-        bmi_scaled = scaler.transform([[bmi_mentah]])[0][0]
+        dummy_input = [[0] * 11]
+        dummy_input[0][0] = bmi_mentah
+        bmi_scaled = scaler.transform(dummy_input)[0][0]
         X_input[0] = bmi_scaled
 
         # Probabilitas murni kelas berisiko (kelas 1)
