@@ -1,10 +1,8 @@
 import os
-import sys
 import joblib
-import pandas as pd
 import numpy as np
+import requests as http_requests
 from flask import Flask, request, jsonify, render_template
-import google.generativeai as genai
 from dotenv import load_dotenv
 import traceback
 
@@ -16,14 +14,10 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATES_DIR = os.path.join(ROOT_DIR, 'templates')
 ASSET_DIR = os.path.join(ROOT_DIR, 'Asset')
 
-# 2. Konfigurasi Gemini API
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-llm_model = genai.GenerativeModel('gemini-2.5-flash')
-
-# 3. Inisialisasi Flask dengan folder 'Asset' untuk file gambar
+# 2. Inisialisasi Flask dengan folder 'Asset' untuk file gambar
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=ASSET_DIR, static_url_path='/Asset')
 
-# 4. Load Model dan Scaler (BMI Only)
+# 3. Load Model dan Scaler (BMI Only)
 MODEL_PATH = os.path.join(ROOT_DIR, 'models', 'heart_attack_model.pkl')
 SCALER_PATH = os.path.join(ROOT_DIR, 'models', 'heart_attack_scaler.pkl')
 THRESHOLD = 0.4898
@@ -39,6 +33,22 @@ try:
     print("✅ Scaler BMI-Only berhasil dimuat!")
 except Exception as e:
     print(f"❌ Error memuat scaler: {e}")
+
+
+def call_gemini(prompt: str) -> str:
+    """Memanggil Gemini API via REST HTTP (tanpa gRPC) agar kompatibel dengan Vercel."""
+    api_key = os.getenv("GEMINI_API_KEY")
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-2.5-flash:generateContent?key={api_key}"
+    )
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    response = http_requests.post(url, json=payload, timeout=60)
+    response.raise_for_status()
+    return response.json()["candidates"][0]["content"]["parts"][0]["text"]
+
 
 @app.route('/')
 def home():
@@ -79,6 +89,8 @@ def predict():
         ]
 
         # Scale HANYA BMI (index 0), fitur lain dibiarkan mentah
+        # Scaler dilatih dengan 11 fitur, jadi kita buat dummy array 11 fitur
+        # dan hanya ambil hasil scaling dari index 0 (BMI)
         bmi_mentah = X_input[0]
         dummy_input = [[0] * 11]
         dummy_input[0][0] = bmi_mentah
@@ -142,8 +154,8 @@ def predict():
         Buat daftar <ul> rekomendasi konkret dan spesifik untuk pasien ini. Setiap <li> diawali <strong>Nama Rekomendasi:</strong>. Sertakan kapan harus ke dokter. Gunakan span warna untuk hal positif yang dianjurkan.
         """
 
-        ai_response = llm_model.generate_content(prompt)
-        ai_analysis = ai_response.text.replace("```html", "").replace("```", "").strip()
+        ai_analysis = call_gemini(prompt)
+        ai_analysis = ai_analysis.replace("```html", "").replace("```", "").strip()
 
         return jsonify({
             'status': 'success',
