@@ -88,13 +88,23 @@ def predict():
             1 if gender == 'Male' else 0                                      # index 10: Sex
         ]
 
-        # Scale HANYA BMI (index 0), fitur lain dibiarkan mentah
-        # Scaler dilatih dengan 11 fitur, jadi kita buat dummy array 11 fitur
-        # dan hanya ambil hasil scaling dari index 0 (BMI)
+        # Scale HANYA BMI (index 0)
         bmi_mentah = X_input[0]
-        dummy_input = [[0] * 11]
-        dummy_input[0][0] = bmi_mentah
-        bmi_scaled = scaler.transform(dummy_input)[0][0]
+        
+        # Cek apakah scaler yang diload adalah scaler yang rusak/lama (mean 0, scale 1)
+        # Jika iya, gunakan manual scaling berdasarkan dataset CDC (Mean: 28.32, Std: 6.35)
+        if hasattr(scaler, "mean_") and abs(scaler.mean_[0]) < 0.001:
+            bmi_scaled = (bmi_mentah - 28.3253) / 6.3562
+        else:
+            try:
+                # Coba transform untuk 1 fitur (jika scaler sudah diupdate user)
+                bmi_scaled = scaler.transform([[bmi_mentah]])[0][0]
+            except ValueError:
+                # Fallback ke 11 fitur (jika scaler masih versi 11 fitur tapi mean tidak 0)
+                dummy_input = [[0] * 11]
+                dummy_input[0][0] = bmi_mentah
+                bmi_scaled = scaler.transform(dummy_input)[0][0]
+                
         X_input[0] = bmi_scaled
 
         # Probabilitas murni kelas berisiko (kelas 1)
