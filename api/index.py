@@ -5,6 +5,7 @@ import requests as http_requests
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 import traceback
+import time
 
 # 1. Load Environment Variables
 load_dotenv()
@@ -35,8 +36,8 @@ except Exception as e:
     print(f"❌ Error memuat scaler: {e}")
 
 
-def call_gemini(prompt: str) -> str:
-    """Memanggil Gemini API via REST HTTP (tanpa gRPC) agar kompatibel dengan Vercel."""
+def call_gemini(prompt: str, max_retries: int = 3) -> str:
+    """Memanggil Gemini API via REST HTTP dengan auto-retry untuk mengatasi 503 Server Error."""
     api_key = os.getenv("GEMINI_API_KEY")
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
@@ -45,9 +46,19 @@ def call_gemini(prompt: str) -> str:
     payload = {
         "contents": [{"parts": [{"text": prompt}]}]
     }
-    response = http_requests.post(url, json=payload, timeout=60)
+    
+    for attempt in range(max_retries):
+        response = http_requests.post(url, json=payload, timeout=60)
+        
+        # Jika server Google AI sedang sibuk (503 Service Unavailable)
+        if response.status_code == 503 and attempt < max_retries - 1:
+            time.sleep(2) # Tunggu 2 detik lalu coba lagi
+            continue
+            
+        response.raise_for_status()
+        return response.json()["candidates"][0]["content"]["parts"][0]["text"]
+        
     response.raise_for_status()
-    return response.json()["candidates"][0]["content"]["parts"][0]["text"]
 
 
 @app.route('/')
