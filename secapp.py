@@ -3,11 +3,16 @@ import joblib
 import pandas as pd
 import numpy as np
 from flask import Flask, request, jsonify, render_template
+import google.generativeai as genai
 from dotenv import load_dotenv
 import traceback
 
 # 1. Load Environment Variables
 load_dotenv()
+
+# 2. Konfigurasi Gemini API
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+llm_model = genai.GenerativeModel('gemini-2.5-flash')
 
 # 3. Inisialisasi Flask dengan folder 'Asset' untuk file gambar
 app = Flask(__name__, static_folder='Asset', static_url_path='/Asset')
@@ -86,33 +91,51 @@ def predict():
         smoker_labels = {'0': 'Tidak Pernah Merokok', '1': 'Mantan Perokok', '2': 'Perokok Beberapa Hari', '3': 'Perokok Setiap Hari'}
         smoker_display = smoker_labels.get(str(data.get('smoker', '0')), 'Tidak Pernah Merokok')
 
-        if risk_score < 20:
-            kategori_risiko = "Risiko Rendah"
-            warna_class = "ai-positive"
-            pesan = "Kondisi jantung Anda saat ini masuk dalam kategori aman. Tetap pertahankan gaya hidup sehat, rutin berolahraga, dan makan makanan bergizi."
-        elif risk_score < 50:
-            kategori_risiko = "Waspada"
-            warna_class = "ai-highlight"
-            pesan = "Anda memiliki beberapa faktor risiko yang perlu diperhatikan. Disarankan untuk mulai memperbaiki gaya hidup, mengurangi konsumsi tidak sehat, dan memantau kondisi secara berkala."
-        else:
-            kategori_risiko = "Risiko Tinggi"
-            warna_class = "ai-risk"
-            pesan = "Perhatian! Skor risiko Anda menunjukkan probabilitas yang cukup tinggi. Sangat disarankan untuk segera berkonsultasi dengan dokter untuk pemeriksaan lebih lanjut dan mengambil langkah penanganan yang tepat."
+        prompt = f"""
+        Kamu adalah dokter spesialis jantung. Buat penjelasan hasil analisis untuk pasien bernama {name} dalam format HTML murni (tanpa markdown, tanpa kode blok, langsung output HTML).
 
-        ai_analysis = f"""
-        <h3>Analisis Skor Risiko</h3>
-        <p>Berdasarkan analisis sistem, skor risiko jantung Anda adalah <span class="ai-score">{risk_score}%</span>, yang termasuk dalam kategori <span class="{warna_class}"><strong>{kategori_risiko}</strong></span>.</p>
-        <p>{pesan}</p>
-        <hr>
-        <h3>Faktor yang Mempengaruhi</h3>
-        <ul>
-            <li><strong>BMI:</strong> {bmi}</li>
-            <li><strong>Perokok:</strong> {smoker_display}</li>
-            <li><strong>Aktivitas Fisik:</strong> {data.get('physicalActivity', 'Tidak diketahui')}</li>
-            <li><strong>Diabetes:</strong> {data.get('hadDiabetes', 'Tidak diketahui')}</li>
-            <li><strong>Stroke:</strong> {data.get('hadStroke', 'Tidak diketahui')}</li>
-        </ul>
+        Data Pasien: Usia {age_str}, Gender {gender}, BMI {bmi}, Perokok: {smoker_display}, Alkohol: {alcohol}, Diabetes: {data.get('hadDiabetes')}, Stroke: {data.get('hadStroke')}, Angina: {data.get('hadAngina')}, Kesulitan Berjalan: {data.get('diffWalking')}, COPD: {data.get('hadCOPD')}, Ginjal: {data.get('hadKidneyDisease')}.
+        Skor Risiko Jantung ML: {risk_score}%.
+
+        ATURAN FORMAT HTML YANG WAJIB DIIKUTI:
+
+        1. Untuk heading setiap bagian, gunakan: <h3>Judul Bagian</h3>
+           Heading akan otomatis tampil dengan garis biru di kiri (sudah di-style).
+
+        2. Untuk teks yang menunjukkan HAL POSITIF / BAIK (faktor pelindung jantung):
+           Gunakan: <span class="ai-positive">teks positif</span>  → tampil HIJAU TEBAL
+
+        3. Untuk teks yang menunjukkan HAL BERISIKO / BERBAHAYA:
+           Gunakan: <span class="ai-risk">teks berisiko</span>  → tampil MERAH TEBAL
+
+        4. Untuk angka skor atau nilai penting:
+           Gunakan: <span class="ai-score">{risk_score}%</span>  → tampil merah besar
+
+        5. Untuk istilah medis atau penekanan netral penting:
+           Gunakan: <span class="ai-highlight">istilah</span>  → tampil cokelat/amber tebal
+
+        6. Untuk daftar faktor: gunakan <ul><li>...</li></ul>
+           Di awal setiap <li>, tulis label faktor dengan <strong>Nama Faktor:</strong> lalu penjelasannya.
+           Contoh: <li><strong>BMI ({bmi}):</strong> Penjelasan... <span class="ai-positive">berat badan ideal</span> mengurangi...</li>
+
+        7. Pisahkan 3 bagian dengan: <hr>
+
+        STRUKTUR 3 BAGIAN YANG WAJIB:
+
+        BAGIAN 1 — <h3>Analisis Skor Risiko</h3>
+        Tulis 1-2 paragraf <p> yang menjelaskan arti skor <span class="ai-score">{risk_score}%</span>, apakah rendah/sedang/tinggi, dan gambaran umum kondisi pasien. Gunakan span warna sesuai aturan di atas.
+        Lalu buat sub-heading dengan <h3>Faktor yang Mengurangi Risiko (Positif):</h3> dan daftar <ul> faktor positif pasien.
+        Lalu buat sub-heading <h3>Faktor yang Meningkatkan Risiko:</h3> dan daftar <ul> faktor risiko pasien.
+
+        BAGIAN 2 — Setelah <hr>, tulis <h3>Analisis Kebiasaan dan Riwayat Kesehatan</h3>
+        Buat daftar <ul> yang menganalisis SETIAP faktor data pasien secara individual. Setiap <li> harus memiliki <strong>Nama Faktor:</strong> di awal, lalu penjelasan mekanisme medisnya. Gunakan span warna sesuai aturan.
+
+        BAGIAN 3 — Setelah <hr>, tulis <h3>Solusi dan Rekomendasi Edukasi</h3>
+        Buat daftar <ul> rekomendasi konkret dan spesifik untuk pasien ini. Setiap <li> diawali <strong>Nama Rekomendasi:</strong>. Sertakan kapan harus ke dokter. Gunakan span warna untuk hal positif yang dianjurkan.
         """
+
+        ai_response = llm_model.generate_content(prompt)
+        ai_analysis = ai_response.text.replace("```html", "").replace("```", "").strip()
 
         return jsonify({
             'status': 'success',
