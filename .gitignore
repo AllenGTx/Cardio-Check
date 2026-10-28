@@ -16,3 +16,8 @@ zipFile.zip
 # IDE
 .vscode/
 .idea/
+
+# Scratch & test scripts
+test_*.py
+inspect_model.py
+task.md
